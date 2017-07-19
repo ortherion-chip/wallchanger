@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 
 from imgurpython import ImgurClient
 from configparser import ConfigParser
-import urllib.request
 import webbrowser
 
 
@@ -11,10 +10,10 @@ class Imgur(object):
     Class Imgur deals with authentication and download of images
     '''
 
-    def __init__(self):
-        self.authfile = 'auth.ini'
+    def __init__(self, cfgfile='auth.ini'):
+        self.authfile = cfgfile
         self.authenticate()
-        
+
     def get_credentials(self, imgurCli):
         # Authorization flow, pin example (see docs for other auth types)
         authorization_url = imgurCli.get_auth_url('pin')
@@ -23,7 +22,7 @@ class Imgur(object):
 
         pin = input("Enter pin code: ")
         return imgurCli.authorize(pin, 'pin')
-        
+
     def authenticate(self):
         '''
         Authentication on imgur server
@@ -31,12 +30,13 @@ class Imgur(object):
 
         # Get client id and secret from config file auth.ini
         config = ConfigParser()
+
         config.read(self.authfile)
         client_id = config.get('credentials', 'client_id')
         client_secret = config.get('credentials', 'client_secret')
 
         client = ImgurClient(client_id, client_secret)
-        
+
         try:
             client_access_token = config.get('credentials',
                                              'client_access_token')
@@ -56,7 +56,7 @@ class Imgur(object):
                        client_refresh_token)
             with open(self.authfile, 'w') as cfile:
                 config.write(cfile)
-                
+
             client.set_user_auth(client_access_token, client_refresh_token)
 
         print("Authentication successful! Here are the details:")
@@ -68,12 +68,13 @@ class Imgur(object):
 
     def albums(self):
         '''
-        Returns a dictionary with album_id as key and album_title as value
+        Returns a list with album_id and album_title
         '''
 
-        album = {}
+        album = []
         for alb in self.client.get_account_albums('me'):
-            album[alb.id] = alb.title
+            item = {'id': alb.id, 'title': alb.title}
+            album.append(item)
             # print("Album: {0} {1}".format(alb.title, alb.id))
 
         return album
@@ -83,49 +84,10 @@ class Imgur(object):
         Get all images url from one album. Returns a dictionary with
         img_id as key and img_link as value
         '''
-        
-        img_dict = {}
+
+        img_dict = []
         for img in self.client.get_album_images(albid):
-            # img_dict.append(img.link)
-            img_dict[img.id] = img.link
-            
+            item = {'id': img.id, 'link': img.link}
+            img_dict.append(item)
+
         return img_dict
-
-    def get_image(self, imgid, imgname=None):
-        '''
-        Download image with imgid as imgname
-        '''
-
-        if not imgname:
-            imgname = imgid
-        
-        url = self.client.get_image(imgid).link
-
-        response = urllib.request.urlopen(url)
-
-        meta = response.info()
-        file_size = int(meta["Content-Length"])
-        print(file_size)
-        
-        print("Downloading: {0} Bytes: {1}".format(imgname, file_size))
-
-        imgf = open(imgname, 'wb')
-
-        file_size_dl = 0
-        block_sz = 2**16
-        while True:
-            buffer = response.read(block_sz)
-            if not buffer:
-                break
-            file_size_dl += len(buffer)
-            imgf.write(buffer)
-
-            print("Downloaded: {0} of {1}".format(file_size_dl, file_size))
-            
-        imgf.close()
-
-
-if __name__ == "__main__":
-    a = Imgur()
-    albdict = a.albums()
-
