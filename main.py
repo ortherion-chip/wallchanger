@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 
 from imgur.imgur import Imgur
 from tools import utils

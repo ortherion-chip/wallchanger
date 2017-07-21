@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 
 from imgurpython import ImgurClient
 from configparser import ConfigParser

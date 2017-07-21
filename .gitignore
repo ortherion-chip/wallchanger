@@ -1,0 +1,6 @@
+settings/auth.ini
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+virtenv.sh
